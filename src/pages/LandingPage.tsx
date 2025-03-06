@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
-import { FileText, MessageSquare, Upload, Shield, Menu, X } from 'lucide-react';
+import { FileText, MessageSquare, Upload, Shield, Menu, X, Globe } from 'lucide-react';
 import { useState } from 'react';
 
 const LandingPage = () => {
