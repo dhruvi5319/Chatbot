@@ -1,26 +1,34 @@
-
-const jwt = require('jsonwebtoken');
+import jwt from "jsonwebtoken";
 
 const authMiddleware = (req, res, next) => {
-  // Get token from header
+  // ✅ Debug: Log request headers
+  console.log("🔍 Checking Authorization Header...");
+  
   const authHeader = req.headers.authorization;
-  
-  if (!authHeader?.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'No token, authorization denied' });
+  console.log("📩 Received Authorization Header:", authHeader);
+
+  // ✅ Check if token is missing or malformed
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    console.error("🚨 No token found, access denied.");
+    return res.status(401).json({ message: "No token, authorization denied" });
   }
-  
-  const token = authHeader.split(' ')[1];
-  
+
+  // ✅ Extract Token
+  const token = authHeader.split(" ")[1];
+  console.log("🔑 Extracted Token:", token);
+
   try {
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret_key');
-    
-    // Add user from payload
+    // ✅ Verify Token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("✅ Token verified, decoded payload:", decoded);
+
+    // ✅ Attach user payload to request object
     req.user = decoded;
     next();
   } catch (error) {
-    return res.status(401).json({ message: 'Token is not valid' });
+    console.error("🚨 Invalid Token:", error.message);
+    return res.status(401).json({ message: "Token is not valid" });
   }
 };
 
-module.exports = authMiddleware;
+export default authMiddleware;

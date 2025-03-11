@@ -1,16 +1,19 @@
-
-const express = require('express');
-const cors = require('cors');
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const authRoutes = require('./routes/auth');
+import express from "express";
+import cors from "cors";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import connectDB from "./config/db.js"; // Ensure `.js` extension is included
+import authRoutes from "./routes/auth.js"; // Ensure `.js` extension is included
 
 // Load environment variables
 dotenv.config();
 
 // Initialize Express app
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
+
+// Connect to MongoDB
+connectDB();
 
 // Middleware
 app.use(cors());
@@ -27,19 +30,6 @@ app.get('/api/health', (req, res) => {
 // Connect to MongoDB and start server
 const startServer = async () => {
   try {
-    // Replace with your MongoDB connection string
-    // For local development you can use MongoDB Atlas free tier
-    if (!process.env.MONGODB_URI) {
-      console.warn('Warning: MONGODB_URI not set in environment variables');
-    }
-    
-    if (process.env.MONGODB_URI) {
-      await mongoose.connect(process.env.MONGODB_URI);
-      console.log('Connected to MongoDB');
-    } else {
-      console.log('Skipping MongoDB connection, running in demo mode');
-    }
-
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });

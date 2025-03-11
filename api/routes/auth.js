@@ -1,14 +1,14 @@
+import express from "express";
+import { register, login, getCurrentUser } from "../controllers/authController.js";
+import authMiddleware from "../middleware/auth.js";
 
-const express = require('express');
 const router = express.Router();
-const authController = require('../controllers/authController');
-const authMiddleware = require('../middleware/auth');
 
-// Public routes
-router.post('/register', authController.register);
-router.post('/login', authController.login);
+// ✅ PUBLIC ROUTES (DO NOT REQUIRE AUTHENTICATION)
+router.post("/register", register);
+router.post("/login", login);
 
-// Protected routes
-router.get('/me', authMiddleware, authController.getCurrentUser);
+// ✅ PROTECTED ROUTES (REQUIRE AUTH TOKEN)
+router.get("/me", authMiddleware, getCurrentUser);
 
-module.exports = router;
+export default router;
