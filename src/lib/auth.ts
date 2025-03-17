@@ -33,36 +33,23 @@ export const removeToken = () => {
   localStorage.removeItem('auth_token');
 };
 
-export const loginApi = async (email: string, password: string): Promise<{ user: User; token: string } | null> => {
-  try {
-    console.log("📨 Sending login request:", { email, password });
+export const loginApi = async (email: string, password: string) => {
+  console.log("📨 Sending Login Request:", { email, password });
 
+  try {
     const response = await fetch("http://localhost:5001/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
 
-    const data = await response.json();
-    console.log("📩 API Response:", data);
-
-    if (!response.ok) {
-      console.error("❌ Login failed:", data.message);
-      return null;
-    }
-
-    console.log("✅ Storing token:", data.token);
-    storeToken(data.token); // ✅ Store token in localStorage
-
-    return { user: data.user, token: data.token };
+    console.log("📩 API Response:", response);
+    return response.ok ? await response.json() : null;
   } catch (error) {
-    console.error("🔥 Login Error:", error);
+    console.error("🔥 Login API Error:", error);
     return null;
   }
 };
-
-
-
 
 export const registerApi = async (name: string, email: string, password: string): Promise<{ user: User; token: string } | null> => {
   try {
@@ -111,6 +98,7 @@ export const fetchUserData = async (setUser: (user: User | null) => void) => {
     });
 
     const data = await response.json();
+    console.log("📩 API `/me` Response:", data);
 
     if (response.ok) {
       console.log("✅ User data fetched successfully:", data);

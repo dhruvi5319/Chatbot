@@ -16,11 +16,18 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("🚀 Submit button clicked! Attempting login...");
+  
     const success = await login(email, password);
+    
     if (success) {
+      console.log("✅ Login Successful! Redirecting to dashboard...");
       navigate('/dashboard');
+    } else {
+      console.log("❌ Login Failed! Check API response.");
     }
   };
+  
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4 bg-muted/20">
@@ -68,10 +75,12 @@ const Login = () => {
                 />
               </div>
               <Button 
-                type="submit" 
-                className="w-full"
-                disabled={isLoading}
-              >
+                  type="submit" 
+                  className="w-full"
+                  disabled={isLoading}
+                  onClick={() => console.log("⚡ Form submitted!")}
+                >
+
                 {isLoading ? (
                   <span className="flex items-center justify-center">
                     <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

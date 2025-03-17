@@ -1,4 +1,3 @@
-
 import { ReactNode, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
@@ -12,8 +11,13 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      navigate('/login');
+    if (!isLoading) {
+      console.log("🔍 Checking ProtectedRoute:", { isAuthenticated, isLoading });
+
+      if (!isAuthenticated) {
+        console.warn("❌ User is not authenticated! Redirecting to login...");
+        navigate('/login');
+      }
     }
   }, [isAuthenticated, isLoading, navigate]);
 

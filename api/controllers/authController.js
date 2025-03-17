@@ -5,7 +5,7 @@ import User from "../models/User.js";
 const generateToken = (userId) => {
   return jwt.sign(
     { userId },
-    process.env.JWT_SECRET || 'your_jwt_secret_key',
+    process.env.JWT_SECRET ,
     { expiresIn: '7d' }
   );
 };
@@ -34,7 +34,8 @@ export const register = async (req, res) => {
     
     // Generate JWT token
     const token = generateToken(user._id);
-    
+    console.log("✅ User registered successfully:", user);
+
     res.status(201).json({
       token,
       user: {
@@ -56,58 +57,68 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    
+
+    console.log("📤 Login Attempt:", { email, password });
+
     // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      console.log("❌ User not found in DB:", email);
+      return res.status(400).json({ message: "Invalid credentials" });
     }
-    
-    // Check password
+
+    console.log("🔎 User Found:", user);
+
+    // ✅ Compare Password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      console.log("❌ Password does NOT match for user:", email);
+      return res.status(400).json({ message: "Invalid credentials" });
     }
-    
-    // Generate JWT token
+
+    // ✅ Generate JWT Token
     const token = generateToken(user._id);
-    
+
     res.json({
       token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
-        profileImage: user.profileImage
-      }
+        profileImage: user.profileImage,
+      },
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("❌ Login Error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
+
 
 // @route   GET /api/auth/me
 // @desc    Get current user
 // @access  Private
 export const getCurrentUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select('-password');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Unauthorized: No token provided" });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    console.log("📤 Decoded Token:", decoded); // ✅ Debug token payload
+
+    const user = await User.findById(decoded.userId).select("-password");
     
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
+
     res.json({ user });
-    // res.json({
-    //   user: {
-    //     id: user._id,
-    //     name: user.name,
-    //     email: user.email,
-    //     profileImage: user.profileImage
-    //   }
-    // });
   } catch (error) {
-    console.error('Get current user error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("❌ Error fetching user:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };

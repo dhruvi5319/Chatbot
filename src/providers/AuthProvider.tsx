@@ -54,12 +54,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
   
     try {
+      console.log("📨 Attempting login:", { email, password });
+  
       const response = await loginApi(email, password);
       
       if (response) {
+        console.log("✅ Login API successful, storing token...");
         storeToken(response.token);
-        console.log("✅ Token stored in localStorage:", getToken()); // ✅ Debug token storage
-        await fetchUserData(setUser); // ✅ Fetch user details after login
+        
+        console.log("🔄 Fetching user data after login...");
+        await fetchUserData(setUser);
+  
+        console.log("✅ User state updated after login:", user);
+  
         toast.success("Login successful");
         return true;
       } else {
@@ -76,44 +83,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
   
+  
+  
   const register = async (name: string, email: string, password: string) => {
     setIsLoading(true);
     setError(null);
-
+  
     try {
       const response = await registerApi(name, email, password);
-
-     if (response) {
-       storeToken(response.token);
-       console.log("✅ Token Stored:", response.token);
-
-        // Fetch user details immediately after registration
-        const userResponse = await fetch("http://localhost:5001/api/auth/me", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${response.token}`,
-          },
-        });
-
-        const userData = await userResponse.json();
-        console.log("👤 User Data Retrieved:", userData);
-
-       setUser(userData.user);
-       toast.success("Registration successful");
-       return true;
-     } else {
-      setError("Registration failed");
-      return false;
-     }
+  
+      if (response) {
+        storeToken(response.token);
+        console.log("✅ Token Stored:", response.token);
+  
+        await fetchUserData(setUser); // ✅ Ensure user data is fetched after registration
+        toast.success("Registration successful");
+        return true;
+      } else {
+        setError("Registration failed");
+        return false;
+      }
     } catch (err) {
       setError("An error occurred during registration");
       toast.error("Registration failed. Please try again.");
       return false;
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
-  };
+  };  
   
   const logout = () => {
     removeToken();
@@ -127,8 +124,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         user,
         isAuthenticated: !!user,
         isLoading,
-        login: async () => false,
-        register: async () => false,
+        login,
+        register,
         logout: () => {
           removeToken();
           setUser(null);

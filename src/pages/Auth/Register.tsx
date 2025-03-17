@@ -25,11 +25,18 @@ const Register = () => {
       return;
     }
     
+    console.log("📨 Sending Registration Request:", { name, email, password });
+  
     const success = await register(name, email, password);
+    
     if (success) {
+      console.log("✅ Registration Successful! Navigating to dashboard...");
       navigate('/dashboard');
+    } else {
+      console.error("❌ Registration Failed!");
     }
   };
+  
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4 bg-muted/20">

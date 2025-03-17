@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { Upload, X, FileText, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { getToken } from '@/lib/auth'; // Import JWT token function
 
 interface DocumentUploaderProps {
   onComplete: (doc: { id: string; name: string; type: string; size: string; createdAt: string }) => void;
@@ -51,36 +51,45 @@ export const DocumentUploader = ({ onComplete, onCancel }: DocumentUploaderProps
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
-  const simulateUpload = () => {
+  // ✅ ACTUAL UPLOAD FUNCTION (Replaces Mock Upload)
+  const handleUpload = async () => {
+    if (!file) return;
+
     setUploading(true);
     setUploadProgress(0);
-    
-    // Mock upload progress simulation
-    const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          
-          // Mock successful upload
-          setTimeout(() => {
-            const fileExt = file?.name.split('.').pop() || '';
-            const newDoc = {
-              id: `doc-${Date.now()}`,
-              name: file?.name || 'Untitled',
-              type: fileExt,
-              size: formatFileSize(file?.size || 0),
-              createdAt: new Date().toISOString(),
-            };
-            
-            onComplete(newDoc);
-            toast.success('Document uploaded successfully!');
-          }, 500);
-          
-          return 100;
-        }
-        return prev + 5;
+    setUploadError(null);
+
+    const formData = new FormData();
+    formData.append("file", file); // ✅ Send file in FormData
+
+    try {
+      const token = getToken(); // ✅ Get JWT Token
+
+      const response = await fetch("http://localhost:5001/api/documents/upload", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`, // ✅ Send token for authentication
+        },
+        body: formData, // ✅ Send FormData (file upload)
       });
-    }, 200);
+
+      if (!response.ok) {
+        throw new Error("Upload failed. Please try again.");
+      }
+
+      const data = await response.json();
+      setUploadProgress(100);
+
+      // ✅ Call onComplete to update UI
+      onComplete(data.document);
+      toast.success("Document uploaded successfully!");
+
+    } catch (error) {
+      setUploadError(error.message);
+      toast.error("Failed to upload document.");
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -177,7 +186,7 @@ export const DocumentUploader = ({ onComplete, onCancel }: DocumentUploaderProps
             
             <div className="flex justify-end space-x-2">
               <Button variant="outline" onClick={onCancel}>Cancel</Button>
-              <Button onClick={simulateUpload} disabled={!file}>Upload</Button>
+              <Button onClick={handleUpload} disabled={!file}>Upload</Button>
             </div>
           </div>
         )}
