@@ -65,7 +65,7 @@ export const DocumentUploader = ({ onComplete, onCancel }: DocumentUploaderProps
     try {
       const token = getToken(); // ✅ Get JWT Token
 
-      const response = await fetch("http://localhost:5001/api/documents/upload", {
+      const response = await fetch("http://localhost:5002/api/documents/upload", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`, // ✅ Send token for authentication

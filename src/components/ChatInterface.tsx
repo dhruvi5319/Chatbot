@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Send, Loader2, Bot, User, FileText, Globe, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,10 +23,9 @@ export const ChatInterface = () => {
       content: "Hello! I'm your AI assistant. Ask me anything about your documents, or any general questions you have.",
       sender: 'bot',
       timestamp: new Date(),
-      source: null
-    }
+      source: null,
+    },
   ]);
-  
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -40,39 +38,57 @@ export const ChatInterface = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleSendMessage = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!newMessage.trim()) return;
-    
+
     // Add user message
-    const userMessage: Message = {
+    const userMsg: Message = {
       id: `user-${Date.now()}`,
       content: newMessage,
       sender: 'user',
-      timestamp: new Date()
+      timestamp: new Date(),
     };
-    
-    setMessages(prev => [...prev, userMessage]);
+    setMessages(prev => [...prev, userMsg]);
+    const question = newMessage; // Preserve question text
     setNewMessage('');
     setIsLoading(true);
-    
-    // Simulate AI thinking time
-    setTimeout(() => {
-      // Simulate AI response
-      const useDocuments = Math.random() > 0.5; // Randomly choose source for demo
-      
-      const botMessage: Message = {
+
+    try {
+      // Send the user question to FastAPI
+      const response = await fetch("http://localhost:5002/api/chat/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch answer");
+      }
+
+      const data = await response.json();
+      const botMsg: Message = {
         id: `bot-${Date.now()}`,
-        content: generateMockResponse(newMessage),
+        content: data.answer, // Real answer from FastAPI/OpenAI
         sender: 'bot',
         timestamp: new Date(),
-        source: useDocuments ? 'documents' : 'web'
+        source: 'documents', // or set dynamically if your API provides that info
       };
-      
-      setMessages(prev => [...prev, botMessage]);
+
+      setMessages(prev => [...prev, botMsg]);
+    } catch (error) {
+      console.error("Error fetching chat response:", error);
+      const errorMsg: Message = {
+        id: `bot-${Date.now()}`,
+        content: "Sorry, I couldn't fetch an answer at the moment.",
+        sender: 'bot',
+        timestamp: new Date(),
+        source: null,
+      };
+      setMessages(prev => [...prev, errorMsg]);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const handleClearChat = () => {
@@ -82,22 +98,9 @@ export const ChatInterface = () => {
         content: "Hello! I'm your AI assistant. Ask me anything about your documents, or any general questions you have.",
         sender: 'bot',
         timestamp: new Date(),
-        source: null
-      }
+        source: null,
+      },
     ]);
-  };
-
-  // Mock response generator
-  const generateMockResponse = (query: string): string => {
-    if (query.toLowerCase().includes('document') || query.toLowerCase().includes('file')) {
-      return "Based on your documents, I found that the Q3 financial report shows a 15% increase in revenue compared to Q2. The growth is primarily attributed to the new product line launched in August.";
-    } else if (query.toLowerCase().includes('meeting') || query.toLowerCase().includes('notes')) {
-      return "According to your meeting notes from last week, the team decided to postpone the product launch until next quarter to allow for additional testing and refinement.";
-    } else if (query.toLowerCase().includes('sales') || query.toLowerCase().includes('report')) {
-      return "The sales report indicates that the western region had the highest performance last month, with a 23% increase year-over-year. The eastern region saw a slight decline of 3%.";
-    } else {
-      return "I don't have specific information about that in your documents. However, based on my general knowledge, I can tell you that best practices suggest focusing on customer feedback and iterative improvements for product development.";
-    }
   };
 
   return (
@@ -112,7 +115,6 @@ export const ChatInterface = () => {
             <p className="text-xs text-muted-foreground">Answers based on your documents & web search</p>
           </div>
         </div>
-        
         <Button variant="ghost" size="icon" onClick={handleClearChat}>
           <Trash className="h-4 w-4" />
         </Button>
@@ -148,24 +150,14 @@ export const ChatInterface = () => {
                     )}
                   </Avatar>
                 </div>
-                
                 <div>
-                  <div className={`${
-                    message.sender === 'user' 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'bg-card shadow-sm border border-border/60'
-                    } px-4 py-3 rounded-2xl`}
-                  >
+                  <div className={`${message.sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-card shadow-sm border border-border/60'} px-4 py-3 rounded-2xl`}>
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
                   </div>
-                  
-                  <div className={`mt-1 flex items-center text-xs text-muted-foreground ${
-                    message.sender === 'user' ? 'justify-end' : ''
-                  }`}>
+                  <div className={`mt-1 flex items-center text-xs text-muted-foreground ${message.sender === 'user' ? 'justify-end' : ''}`}>
                     <span className="mr-2">
                       {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
-                    
                     {message.source && (
                       <TooltipProvider>
                         <Tooltip>
@@ -196,7 +188,6 @@ export const ChatInterface = () => {
               </div>
             </motion.div>
           ))}
-          
           {isLoading && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -212,7 +203,6 @@ export const ChatInterface = () => {
                     </AvatarFallback>
                   </Avatar>
                 </div>
-                
                 <div>
                   <div className="bg-card shadow-sm border border-border/60 px-4 py-3 rounded-2xl flex items-center">
                     <span className="flex items-center">
@@ -224,7 +214,6 @@ export const ChatInterface = () => {
               </div>
             </motion.div>
           )}
-          
           <div ref={messagesEndRef} />
         </AnimatePresence>
       </div>
@@ -251,3 +240,5 @@ export const ChatInterface = () => {
     </div>
   );
 };
+
+export default ChatInterface;
