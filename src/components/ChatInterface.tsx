@@ -69,10 +69,10 @@ export const ChatInterface = () => {
       const data = await response.json();
       const botMsg: Message = {
         id: `bot-${Date.now()}`,
-        content: data.answer, // Real answer from FastAPI/OpenAI
+        content: data.answer,
         sender: 'bot',
         timestamp: new Date(),
-        source: 'documents', // or set dynamically if your API provides that info
+        source: data.source || null, // ✅ Dynamically assign from backend
       };
 
       setMessages(prev => [...prev, botMsg]);
@@ -155,40 +155,16 @@ export const ChatInterface = () => {
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
                   </div>
                   <div className={`mt-1 flex items-center text-xs text-muted-foreground ${message.sender === 'user' ? 'justify-end' : ''}`}>
-                    <span className="mr-2">
-                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                    {message.source && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Badge variant="outline" className="h-5 flex items-center space-x-1">
-                              {message.source === 'documents' ? (
-                                <FileText className="h-3 w-3" />
-                              ) : (
-                                <Globe className="h-3 w-3" />
-                              )}
-                              <span>
-                                {message.source === 'documents' ? 'From your documents' : 'Web search'}
-                              </span>
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>
-                              {message.source === 'documents'
-                                ? 'This answer is based on your uploaded documents'
-                                : 'This answer is from web search'}
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
+                         <span>
+                            {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                         </span>
                   </div>
+
                 </div>
               </div>
             </motion.div>
           ))}
-          {isLoading && (
+          {/* {isLoading && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -213,7 +189,7 @@ export const ChatInterface = () => {
                 </div>
               </div>
             </motion.div>
-          )}
+          )} */}
           <div ref={messagesEndRef} />
         </AnimatePresence>
       </div>
